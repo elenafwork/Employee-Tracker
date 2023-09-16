@@ -1,5 +1,5 @@
 const inquirer = require("inquirer");
-const express = require('express');
+const express = require("express");
 const mysql = require("mysql2");
 //import chalk from 'chalk';
 const db = mysql.createConnection(
@@ -12,12 +12,10 @@ const db = mysql.createConnection(
   console.log(`Connected to the employee_db database.`)
 );
 
-
-function init(){
-    console.log("EMPLOYEE MANAGEMENT");
-    menuPrompt();
-};
-
+function init() {
+  console.log("EMPLOYEE MANAGEMENT");
+  menuPrompt();
+}
 
 //MAIM MENU PROMPT
 const menu = [
@@ -85,17 +83,105 @@ function menuPrompt() {
   });
 }
 
-
 // function for viewing all employees table
 function AllEmployeesTable() {
-  db.query("SELECT * FROM employee ",  (error, response) => {
+  db.query("SELECT * FROM employee ", (error, response) => {
     if (error) throw error;
     console.table(response);
     menuPrompt();
   });
-   
 }
 
+//function for viewing all departments
+function allDepartmentsTable() {
+  db.query("SELECT * FROM department", (error, response) => {
+    if (error) throw error;
+    console.table(response);
+    menuPrompt();
+  });
+}
+
+//function for viewing all roles
+function allRolesTable() {
+  db.query("SELECT * FROM role", (error, response) => {
+    if (error) throw error;
+    console.table(response);
+    menuPrompt();
+  });
+}
+
+//function for adding department
+function addDepartmentToDb() {
+  //allDepartmentsTable();
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "Please, write the new department name",
+        name: "newDepName",
+      },
+    ])
+    .then((data) => {
+      console.log(data);
+
+      db.query(
+        "INSERT INTO department (name) VALUES (?)",
+        [data.newDepName],
+        (error, res) => {
+          if (error) throw error;
+          console.log("new department  added!");
+          menuPrompt();
+        }
+      );
+    });
+}
+
+//function for adding roles
+function addRoleToDb() {
+  db.query("SELECT * FROM department", (error, response) => {
+    if (error) throw error;
+    console.log(response);
+    let departments = response;
+    const allDepartments = departments.map(({ id, name }) => ({
+      name: name,
+      value: id,
+    }));
+    inquirer
+      .prompt([
+        {
+          type: "input",
+          message: "Please, write the new role name",
+          name: "newRoleName",
+        },
+        {
+          type: "input",
+          message: "What is the salary for the new role",
+          name: "newRoleSalary",
+        },
+        {
+          type: "list",
+          message: "What department is this role belong to?",
+          choices: allDepartments,
+          name: "newRoleDepartment",
+        },
+      ])
+
+      .then((data) => {
+        console.log(data);
+
+        db.query(
+          `INSERT INTO role (title, salary, department_id ) VALUES ('${data.newRoleName}', ${data.newRoleSalary}, ${ data.newRoleDepartment})`,         
+          (error, res) => {
+            if (error) throw error;
+            console.log(data);
+
+            console.log("new role  added!");
+            menuPrompt();
+          }
+        );
+      });
+  });
+}
 
 // async function allRolesTable() {
 //   const [roles] = await db.query("SELECT * FROM role");
@@ -135,17 +221,17 @@ function AllEmployeesTable() {
 //       message: "Please, write the new role name",
 //       name: "newRoleName",
 //     },
-//     {
-//       type: "input",
-//       message: "What is the salary for the new role",
-//       name: "newRoleSalary",
-//     },
-//     {
-//       type: "list",
-//       message: "What department is this role belong to?",
-//       choices: departments,
-//       name: "newRoleDepartment",
-//     },
+// {
+//   type: "input",
+//   message: "What is the salary for the new role",
+//   name: "newRoleSalary",
+// },
+// {
+//   type: "list",
+//   message: "What department is this role belong to?",
+//   choices: departments,
+//   name: "newRoleDepartment",
+// },
 //   ];
 //   inquirer.prompt(addRoleQuestion).then((data) => {
 //     console.log(data);
